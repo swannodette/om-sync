@@ -5,13 +5,18 @@
             [om.dom :as dom :include-macros true]
             [om-sync.util :refer [edn-xhr]]))
 
-(defn error? [v]
-  )
+(defn error? [res]
+  (contains? v :error))
 
 (def type->method
   {::create :post
    ::update :put
    ::delete :delete})
+
+(def auto-handlers
+  {"create" :post
+   "update" :put
+   "delete" :delete})
 
 (defn sync-server [url type {:keys [new-data]}]
   (let [res-chan (chan)]
@@ -46,7 +51,8 @@
                   (if (= c kill-chan)
                     :done
                     (do
-                      (if-let [hdlr (get hdlrs (first v))]
+                      (if-let [hdlr (or (get hdlrs (first v))
+                                        (auto-handlers (name (first v))))]
                         (let [res (<! (sync-server url hdlr v))]
                           (if (error? res)
                             ((:on-error opts) res v)
@@ -67,6 +73,6 @@
             :hdlrs {:class/create ::create
                     :class/delete ::delete
                     :class/title  ::update}
-            :on-success (fn [_])
-            :on-error (fn [_])}})
+            :on-success (fn [res txd])
+            :on-error (fn [rest txd])}})
   )
