@@ -37,6 +37,10 @@
               txs (sub :txs (om/get-shared owner :tx-chan))]
           (om/set-state! :txs txs)
           (assert (not (nil? tx-chan)) "om-sync requires shared :tx-chan")
+          (edn-xhr
+            {:method :get
+             :url url
+             :on-complete #(om/update! ::sync coll %)})
           (go (loop []
                 (let [[v c] (alt! [kill-chan txs])]
                   (if (= c kill-chan)
