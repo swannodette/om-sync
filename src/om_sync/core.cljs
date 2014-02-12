@@ -34,10 +34,11 @@
       om/IWillMount
       (will-mount [_]
         (let [kill-chan (om/get-state owner :kill-chan)
-              tx-chan   (om/get-shared owner :tx-chan)]
+              txs (sub :txs (om/get-shared owner :tx-chan))]
+          (om/set-state! :txs txs)
           (assert (not (nil? tx-chan)) "om-sync requires shared :tx-chan")
           (go (loop []
-                (let [[v c] (alt! [kill-chan tx-chan])]
+                (let [[v c] (alt! [kill-chan txs])]
                   (if (= c kill-chan)
                     :done
                     (do
@@ -49,8 +50,9 @@
                       (recur))))))))
       om/IWillUnmount
       (will-unmount [_]
-        (let [kill-chan (om/get-state owner :kill-chan)]
-          (put! kill-chan (js/Date.))))
+        (let [{:keys [kill-chan txs]} (om/get-state owner)]
+          (put! kill-chan (js/Date.))
+          (unsub (om/get-shared owner :tx-chan) :txs txs)))
       om/IRender
       (render [_]
         (om/build view coll opts)))))
