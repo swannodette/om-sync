@@ -34,7 +34,28 @@
   Once built om-sync will act on any transactions to the :coll value
   regardless of depth. In order to identiy which transactions to act
   on these transactions must be labeled as :create, :update, or
-  :delete."
+  :delete.
+
+  om-sync takes a variety of options via the :opts passed to
+  om.core/build:
+
+  :view - a required Om component function to render the collection.
+
+  :id-key - which property represents the server key for a changed
+    item in the collection.
+
+  :filter - a function of which transaction tags to actually sync.
+
+  :tag-fn - not all componets you might want to interact with may
+    have properly tagged their transactions. This function will
+    receive the transaction data and return the determined tag.
+
+  :on-success - a callback function that will receive the server
+    response and the transaction data on success.
+
+  :on-error - a callback function that will receive the server error
+    and the transaction data on failure. The transaction data can
+    easily be leverage to roll back the application state."
   ([data owner] (om-sync data owner nil))
   ([{:keys [url coll] :as data} owner opts]
     (assert (not (nil? url)) "om-sync component not given url")
@@ -44,7 +65,7 @@
         {:kill-chan (chan)})
       om/IWillMount
       (will-mount [_]
-        (let [{:keys [id-key filter]} opts
+        (let [{:keys [id-key filter tag-fn]} opts
               kill-chan (om/get-state owner :kill-chan)
               tx-chan (om/get-shared owner :tx-chan)
               txs (chan)]
@@ -58,7 +79,9 @@
                       ppath (popn (- (count path) (inc (count dpath))) path)]
                   (when (and (subpath? dpath path)
                              (or (nil? filter) (filter tx-data)))
-                    (let [tag (tx-tag tx-data)
+                    (let [tag (if-not (nil? tag-fn)
+                                (tag-fn tx-data)
+                                (tx-tag tx-data))
                           edn (condp = tag
                                 :create new-value
                                 :update (let [m (select-keys (get-in new-state ppath) [id-key])
@@ -68,8 +91,8 @@
                                 nil)]
                       (let [res (<! (sync-server url tag edn))]
                         (if (error? res)
-                          ((:on-error opts) res tx-data)
-                          ((:on-success opts) res tx-data)))))
+                          ((:on-error opts) res (assoc tx-data ::tag tag))
+                          ((:on-success opts) res (assoc tx-data ::tag tag))))))
                   (recur))))))
       om/IWillUnmount
       (will-unmount [_]
