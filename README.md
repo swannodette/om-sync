@@ -72,7 +72,7 @@ transactions with a keyword or a vector that starts with a
 keyword. `om-sync` listens in on transactions labeled `:create`,
 `:update`, and `:delete`.
 
-```
+```clj
 (defn foo [some-data owner]
   (om.core/transact! some-data :foo (fn [_] :bar) :update))
 ```
