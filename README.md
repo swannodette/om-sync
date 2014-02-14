@@ -4,8 +4,8 @@ A synchronization library for [Om](http://github.com/swannodette/om).
 
 ## Example
 
-`om-sync` leverage the new `:tx-listen` option allowed by
-`om.core/root`. For example you could imagine setting up your
+`om-sync` leverages the new `:tx-listen` option allowed by
+`om.core/root`. For example you can imagine setting up your
 application like so:
 
 ```clj
