@@ -77,7 +77,10 @@ keyword. `om-sync` listens in on transactions labeled `:create`,
   (om.core/transact! some-data :foo (fn [_] :bar) :update))
 ```
 
-In the future this will likely become more flexible.
+If you are given some component that does not tag its transactions or
+the tags do not correspond to `:create`, `:update`, and `:delete` you
+can provide a `:tag-fn` via `:opts` to `om-sync` so that you can
+classify the transaction yourself.
 
 ## Contributions
 
