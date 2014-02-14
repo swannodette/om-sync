@@ -5,12 +5,12 @@
             [om.dom :as dom :include-macros true]
             [om-sync.util :refer [edn-xhr popn sub tx-tag subpath? error?]]))
 
-(def type->method
+(def ^:private type->method
   {:create :post
    :update :put
    :delete :delete})
 
-(defn sync-server [url type edn]
+(defn ^:private sync-server [url type edn]
   (let [res-chan (chan)]
     (edn-xhr
       {:method (type->method type)
@@ -21,6 +21,20 @@
     res-chan))
 
 (defn om-sync
+  "ALPHA: Creates a reusable sync componet. Data must be a map containing
+  :url and :coll keys. :url must identify a server endpoint that can
+  takes EDN data via POST for create, PUT for update, and DELETE for
+  delete. :coll must be a cursor into the application state. Note the
+  first argument could of course just be cursor itself.
+
+  In order to function you must provide a subscribeable core.async
+  channel that will stream all :tx-listen events. This channel must be
+  called :tx-chan and provided via the :share option to om.core/root.
+
+  Once built om-sync will act on any transactions to the :coll value
+  regardless of depth. In order to identiy which transactions to act
+  on these transactions must be labeled as :create, :update, or
+  :delete."
   ([data owner] (om-sync data owner nil))
   ([{:keys [url coll] :as data} owner opts]
     (assert (not (nil? url)) "om-sync component not given url")
