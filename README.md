@@ -1,6 +1,7 @@
 # om-sync
 
-A synchronization library for [Om](http://github.com/swannodette/om).
+A reusable synchronization component for
+[Om](http://github.com/swannodette/om).
 
 ## Example
 
