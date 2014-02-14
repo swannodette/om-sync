@@ -2,7 +2,7 @@
 
 A synchronization library for [Om](http://github.com/swannodette/om).
 
-# Example
+## Example
 
 `om-sync` leverage the new `:tx-listen` option allowed by
 `om.core/root`. For example you could imagine setting up your
