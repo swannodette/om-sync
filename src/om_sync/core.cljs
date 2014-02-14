@@ -46,7 +46,7 @@
 
   :filter - a function of which transaction tags to actually sync.
 
-  :tag-fn - not all componets you might want to interact with may
+  :tag-fn - not all components you might want to interact with may
     have properly tagged their transactions. This function will
     receive the transaction data and return the determined tag.
 
@@ -55,7 +55,7 @@
 
   :on-error - a callback function that will receive the server error
     and the transaction data on failure. The transaction data can
-    easily be leverage to roll back the application state."
+    easily be leveraged to roll back the application state."
   ([data owner] (om-sync data owner nil))
   ([{:keys [url coll] :as data} owner opts]
     (assert (not (nil? url)) "om-sync component not given url")
