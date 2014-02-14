@@ -19,7 +19,7 @@ application like so:
      (fn [res]
        (reset! app-state res)
        (om/root app-view app-state
-         {:target (gdom/getElement "classes")
+         {:target (gdom/getElement "app")
           :shared {:tx-chan tx-pub-chan}
           :tx-listen
           (fn [tx-data root-cursor]
@@ -49,10 +49,10 @@ something goes wrong.
     om/IRenderState
     (render-state [_ {:keys [err-msg]}]
       (dom/div nil
-        (om/build om-sync (:classes app)
-          {:opts {:view classes-view
+        (om/build om-sync (:items app)
+          {:opts {:view items-view
                   :filter (comp #{:create :update :delete} tx-tag)
-                  :id-key :class/id
+                  :id-key :some/id
                   :on-success (fn [res tx-data] (println res))
                   :on-error
                   (fn [err tx-data]
