@@ -63,10 +63,6 @@ something goes wrong.
            (dom/div nil err-msg))))))
 ```
 
-## Usage
-
-You must install Om master.
-
 `om.core/transact!` and `om.core/update!` now support tagging
 transactions with a keyword or a vector that starts with a
 keyword. `om-sync` listens in on transactions labeled `:create`,
