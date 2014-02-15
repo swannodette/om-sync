@@ -10,10 +10,10 @@
    :update :put
    :delete :delete})
 
-(defn ^:private sync-server [url type edn]
+(defn ^:private sync-server [url tag edn]
   (let [res-chan (chan)]
     (edn-xhr
-      {:method (type->method type)
+      {:method (type->method tag)
        :url url
        :data edn
        :on-error (fn [err] (put! res-chan err))
@@ -57,7 +57,12 @@
 
   :on-error - a callback function that will receive the server error
     and the transaction data on failure. The transaction data can
-    easily be leveraged to rollback the application state."
+    easily be leveraged to rollback the application state.
+
+  :sync-chan - if given this option, om-sync not invoke will not
+    invoke sync-server instead it will put a map containing the :url,
+    :tag, :edn, :on-success, :on-error, and :tx-data.  This allows
+    thing like batching and multiple om-sync component coordination."
   ([data owner] (om-sync data owner nil))
   ([{:keys [url coll] :as data} owner opts]
     (assert (not (nil? url)) "om-sync component not given url")
@@ -67,7 +72,8 @@
         {:kill-chan (chan)})
       om/IWillMount
       (will-mount [_]
-        (let [{:keys [id-key filter tag-fn]} opts
+        (let [{:keys [id-key filter tag-fn sync-chan]} opts
+              {:keys [on-success on-error]} opts
               kill-chan (om/get-state owner :kill-chan)
               tx-chan (om/get-shared owner :tx-chan)
               txs (chan)]
@@ -90,11 +96,18 @@
                                               rel (sub path dpath)]
                                           (assoc-in m (rest rel) new-value))
                                 :delete (-> tx-data :old-value id-key)
-                                nil)]
-                      (let [res (<! (sync-server url tag edn))]
-                        (if (error? res)
-                          ((:on-error opts) res (assoc tx-data ::tag tag))
-                          ((:on-success opts) res (assoc tx-data ::tag tag))))))
+                                nil)
+                          tx-data (assoc tx-data ::tag tag)]
+                      (if-not (nil? sync-chan)
+                        (>! sync-chan
+                          {:url url :tag tag :end edn
+                           :on-success on-success
+                           :on-error on-error
+                           :tx-data tx-data})
+                        (let [res (<! (sync-server url tag edn))]
+                          (if (error? res)
+                            (on-error res tx-data)
+                            (on-success res tx-data))))))
                   (recur))))))
       om/IWillUnmount
       (will-unmount [_]
