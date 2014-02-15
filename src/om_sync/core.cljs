@@ -59,11 +59,11 @@
     and the transaction data on failure. The transaction data can
     easily be leveraged to rollback the application state.
 
-  :sync-chan - if given this option, om-sync not invoke will not
-    invoke sync-server instead it will put a map containing the
-    :listen-path, :url, :tag, :edn, :on-success, :on-error, and
-    :tx-data.  This allows thing like batching and multiple om-sync
-    component coordination."
+  :sync-chan - if given this option, om-sync will not invoke
+    sync-server instead it will put a map containing the :listen-path,
+    :url, :tag, :edn, :on-success, :on-error, and :tx-data on the
+    provided channel. This higher level operations such as server
+    request batching and multiple om-sync component coordination."
   ([data owner] (om-sync data owner nil))
   ([{:keys [url coll] :as data} owner opts]
     (assert (not (nil? url)) "om-sync component not given url")
