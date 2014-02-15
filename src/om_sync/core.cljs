@@ -25,11 +25,13 @@
   :url and :coll keys. :url must identify a server endpoint that can
   takes EDN data via POST for create, PUT for update, and DELETE for
   delete. :coll must be a cursor into the application state. Note the
-  first argument could of course just be cursor itself.
+  first argument could of course just be a cursor itself.
 
   In order to function you must provide a subscribeable core.async
   channel that will stream all :tx-listen events. This channel must be
-  called :tx-chan and provided via the :share option to om.core/root.
+  called :tx-chan and provided via the :share option to om.core/root. It
+  must be a channel constructed with cljs.core.async/pub with the topic
+  :txs.
 
   Once built om-sync will act on any transactions to the :coll value
   regardless of depth. In order to identiy which transactions to act
@@ -41,10 +43,10 @@
 
   :view - a required Om component function to render the collection.
 
-  :id-key - which property represents the server key for a changed
-    item in the collection.
+  :id-key - which property represents the server id for a item in the
+    collection.
 
-  :filter - a function of which transaction tags to actually sync.
+  :filter - a function which filters which tagged transaction to actually sync.
 
   :tag-fn - not all components you might want to interact with may
     have properly tagged their transactions. This function will
@@ -55,7 +57,7 @@
 
   :on-error - a callback function that will receive the server error
     and the transaction data on failure. The transaction data can
-    easily be leveraged to roll back the application state."
+    easily be leveraged to rollback the application state."
   ([data owner] (om-sync data owner nil))
   ([{:keys [url coll] :as data} owner opts]
     (assert (not (nil? url)) "om-sync component not given url")
