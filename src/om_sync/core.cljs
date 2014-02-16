@@ -20,6 +20,20 @@
        :on-complete (fn [res] (put! res-chan res))})
     res-chan))
 
+(defn ^:private tag-and-edn [coll-path path tag-fn id-key tx-data]
+  (let [tag (if-not (nil? tag-fn)
+              (tag-fn tx-data)
+              (tx-tag tx-data))
+        edn (condp = tag
+              :create (:new-value tx-data)
+              :update (let [ppath (popn (- (count path) (inc (count coll-path))) path)
+                            m (select-keys (get-in (:new-state tx-data) ppath) [id-key])
+                            rel (sub path coll-path)]
+                        (assoc-in m (rest rel) (:new-value tx-data)))
+              :delete (-> tx-data :old-value id-key)
+              nil)]
+    [tag edn]))
+
 (defn om-sync
   "ALPHA: Creates a reusable sync componet. Data must be a map containing
   :url and :coll keys. :url must identify a server endpoint that can
@@ -84,20 +98,10 @@
           (async/sub tx-chan :txs txs)
           (om/set-state! owner :txs txs)
           (go (loop []
-                (let [[{:keys [path new-value new-state] :as tx-data} _] (<! txs)
-                      ppath (popn (- (count path) (inc (count coll-path))) path)]
+                (let [[{:keys [path new-value new-state] :as tx-data} _] (<! txs)]
                   (when (and (subpath? coll-path path)
                              (or (nil? filter) (filter tx-data)))
-                    (let [tag (if-not (nil? tag-fn)
-                                (tag-fn tx-data)
-                                (tx-tag tx-data))
-                          edn (condp = tag
-                                :create new-value
-                                :update (let [m (select-keys (get-in new-state ppath) [id-key])
-                                              rel (sub path coll-path)]
-                                          (assoc-in m (rest rel) new-value))
-                                :delete (-> tx-data :old-value id-key)
-                                nil)
+                    (let [[tag edn] (tag-and-edn coll-path path tag-fn id-key tx-data)
                           tx-data (assoc tx-data ::tag tag)]
                       (if-not (nil? sync-chan)
                         (>! sync-chan
