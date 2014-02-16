@@ -98,23 +98,26 @@
           (async/sub tx-chan :txs txs)
           (om/set-state! owner :txs txs)
           (go (loop []
-                (let [[{:keys [path new-value new-state] :as tx-data} _] (<! txs)]
-                  (when (and (subpath? coll-path path)
-                             (or (nil? filter) (filter tx-data)))
-                    (let [[tag edn] (tag-and-edn coll-path path tag-fn id-key tx-data)
-                          tx-data (assoc tx-data ::tag tag)]
-                      (if-not (nil? sync-chan)
-                        (>! sync-chan
-                          {:url url :tag tag :edn edn
-                           :listen-path coll-path
-                           :on-success on-success
-                           :on-error on-error
-                           :tx-data tx-data})
-                        (let [res (<! (sync-server url tag edn))]
-                          (if (error? res)
-                            (on-error res tx-data)
-                            (on-success res tx-data))))))
-                  (recur))))))
+                (let [[v c] (alts! [txs kill-chan])]
+                  (if (= c kill-chan)
+                    :done
+                    (let [[{:keys [path new-value new-state] :as tx-data} _] v]
+                      (when (and (subpath? coll-path path)
+                              (or (nil? filter) (filter tx-data)))
+                        (let [[tag edn] (tag-and-edn coll-path path tag-fn id-key tx-data)
+                              tx-data (assoc tx-data ::tag tag)]
+                          (if-not (nil? sync-chan)
+                            (>! sync-chan
+                              {:url url :tag tag :edn edn
+                               :listen-path coll-path
+                               :on-success on-success
+                               :on-error on-error
+                               :tx-data tx-data})
+                            (let [res (<! (sync-server url tag edn))]
+                              (if (error? res)
+                                (on-error res tx-data)
+                                (on-success res tx-data))))))
+                      (recur))))))))
       om/IWillUnmount
       (will-unmount [_]
         (let [{:keys [kill-chan txs]} (om/get-state owner)]
