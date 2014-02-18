@@ -41,4 +41,4 @@
         (on-error {:error (.getResponseText xhr)})))
     (. xhr
       (send url (meths method) (when data (pr-str data))
-        #js {"Content-Type" "application/edn"}))))
+        #js {"Content-Type" "application/edn" "Accept" "application/edn"}))))
