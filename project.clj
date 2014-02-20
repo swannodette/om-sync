@@ -1,4 +1,4 @@
-(defproject om-sync "0.1.0"
+(defproject om-sync "0.1.1"
   :description "A sync component for Om"
   :url "http://github.com/swannodette/om-sync"
   :license {:name "Eclipse Public License"
@@ -7,7 +7,7 @@
   :dependencies [[org.clojure/clojure "1.5.1"]
                  [org.clojure/clojurescript "0.0-2156" :scope "provided"]
                  [org.clojure/core.async "0.1.278.0-76b25b-alpha" :scope "provided"]
-                 [om "0.4.1" :scope "provided"]]
+                 [om "0.5.0" :scope "provided"]]
 
   :plugins [[lein-cljsbuild "1.0.2"]]
 
