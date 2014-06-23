@@ -48,7 +48,7 @@
   :txs.
 
   Once built om-sync will act on any transactions to the :coll value
-  regardless of depth. In order to identiy which transactions to act
+  regardless of depth. In order to identify which transactions to act
   on these transactions must be labeled as :create, :update, or
   :delete.
 
